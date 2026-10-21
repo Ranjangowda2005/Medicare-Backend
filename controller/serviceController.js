@@ -126,25 +126,25 @@ export const getMyAppointments = async (req, res) => {
 
     const getFromRedis = await client.get(redisKey);
 
-    if (!getFromRedis) {
-      const appointments = await serviceModel
-        .find({ userId: req.user })
-        .populate("userId", "name email ")
-        .sort({ createdAt: -1 });
-
-      await client.set(redisKey, JSON.stringify(appointments));
-
+    if (getFromRedis !== null) {
       return res.status(200).json({
         success: true,
-        message: "user found from database",
-        appointments,
+        message: "user found from redis",
+        appointments: getFromRedis,
       });
     }
 
+    const appointments = await serviceModel
+      .find({ userId: req.user })
+      .populate("userId", "name email ")
+      .sort({ createdAt: -1 });
+
+    await client.set(redisKey, appointments, { ex: 300 });
+
     return res.status(200).json({
       success: true,
-      message: "user found from redis",
-      appointments: JSON.parse(getFromRedis),
+      message: "user found from database",
+      appointments,
     });
   } catch (error) {
     return res.status(500).json({
@@ -165,12 +165,15 @@ export const getAppointments = async (req, res) => {
     // -----------------------------------------
     // 1. Get appointments
     // -----------------------------------------
+
+
     const appointments = await serviceModel
       .find()
       .skip(skip)
       .limit(limit)
       .populate("userId", "name email image")
       .sort({ createdAt: -1 });
+
 
     // -----------------------------------------
     // 2. Get appointment IDs

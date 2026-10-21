@@ -21,7 +21,7 @@ export const authentication = async (req, res, next) => {
       });
     }
 
-    const verify = jwt.verify(token, "webdevelopment");
+    const verify = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await registrationModel.findById(verify.id);
 

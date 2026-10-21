@@ -20,7 +20,7 @@ export const doctorAuthentication = async (req, res, next) => {
       });
     }
 
-    const verify = jwt.verify(token, "webdevelopment");
+    const verify = jwt.verify(token, process.env.JWT_SECRET);
 
     req.doctor = verify.id;
 
